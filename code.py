@@ -71,7 +71,7 @@ with file as logger:
              print(str(output)[0:len(str(output))-3]+'\n')
              file_write=open('/home/anthony/Sept_12_start.txt','a')
              file_write.write(str(output)[0:len(str(output))]+'\n')
-        if(counter + 5*1 < time.time()):
+        if(counter + 5*60 < time.time()):
              sumofdata = 0
              for item in avg_list:
                  sumofdata = sumofdata + item[0]
@@ -81,3 +81,4 @@ with file as logger:
              counter = time.time()
         avg_list.append([int(decode_data(output).decode("utf-8"))])
         number = number + 1
+        #print(number)
