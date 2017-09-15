@@ -70,8 +70,8 @@ with file as logger:
         if int(ID) == 53228632 or int(ID) == 53236473:
              print(str(output)[0:len(str(output))-3]+'\n')
              file_write=open('/home/anthony/Sept_12_start.txt','a')
-             file_write.write(str(output)[0:len(str(output))]+'\n')
-        if(counter + 5*60 < time.time()):
+             file_write.write(str(output.decode("utf-8"))[0:len(str(output.decode("utf-8")))]+'\n')
+        if(counter + 3*60 > time.time()):
              sumofdata = 0
              for item in avg_list:
                  sumofdata = sumofdata + item[0]
