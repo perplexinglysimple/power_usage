@@ -6,13 +6,21 @@ import git
 import struct
 from subprocess import Popen,PIPE
 
+amount_of_meters = []
+
 class drive:
     def __init__(self):
        self.repo = git.Repo( './' )
     def upload_file(self, file, filename):
-        self.repo.git.add(  filename )
-        self.repo.git.commit( m= filename + ' Is the file for this day')
-        self.repo.git.push()
+        try:
+            self.repo.git.add([filename])
+            average = int()
+            for item in amount_of_meters:
+                 average = sumofdata + item
+            self.repo.git.commit( m= filename + ' Is the file for this day. This was sampling every 60 seconds. On average it saw ' + str(average) + ' power meters')
+            self.repo.git.push()
+        except git.exc.GitCommandError:
+            print("We done messed up")
 
 class RotatingFileOpener:
     def __init__(self, path, mode='a', prepend="", append=""):
@@ -57,28 +65,32 @@ def decode_data(data):
 
 #https://github.com/perplexinglysimple/power_usage
 
-counter = time.time()
 avg_list = []
 number = 0
 file = RotatingFileOpener('./', prepend='power_data-', append='.txt')
-with file as logger:
- #A friend wrote this code to capture our houses data and put it in a text file for latter processing.
- pipe = Popen("/home/anthony/go/bin/rtlamr", shell=True, stdout=PIPE)
- while pipe.poll() is None:
+meters_file = RotatingFileOpener('./', prepend='meters_saw-', append='.txt')
+with meters_file as logger_meters:
+ with file as logger:
+  #A friend wrote this code to capture our houses data and put it in a text file for latter processing.
+  pipe = Popen("/home/anthony/go/bin/rtlamr", shell=True, stdout=PIPE)
+  counter = time.time()
+  while pipe.poll() is None:
         output=pipe.stdout.readline()
         ID=str(output)[(str(output).find('ID:')+3):(str(output).find('Type:'))]
         if int(ID) == 53228632 or int(ID) == 53236473:
              print(str(output)[0:len(str(output))-3]+'\n')
              file_write=open('/home/anthony/Sept_12_start.txt','a')
              file_write.write(str(output.decode("utf-8"))[0:len(str(output.decode("utf-8")))]+'\n')
-        if(counter + 3*60 > time.time()):
+        if(int(counter) + 1*60 <= int(time.time())):
+             print(str(number) + " this is how many this time")
+             amount_of_meters.append(number)
+             meters_file.write(str(number) + ',' + str(time.time()) + '\n')
              sumofdata = 0
              for item in avg_list:
                  sumofdata = sumofdata + item[0]
-             logger.write(str((sumofdata / number)) + " for time " + str(time.time()) + " next ")
+             logger.write(str((sumofdata / number)) + "," + str(time.time()) + "\n")
              avg_list.clear()
              number = 0
              counter = time.time()
         avg_list.append([int(decode_data(output).decode("utf-8"))])
         number = number + 1
-        #print(number)
