@@ -6,7 +6,7 @@ import git
 import struct
 from subprocess import Popen,PIPE
 
-amount_of_meters = []
+power_gain = 0
 
 class drive:
     def __init__(self):
@@ -14,13 +14,30 @@ class drive:
     def upload_file(self, file, filename):
         try:
             self.repo.git.add([filename])
-            average = int()
-            for item in amount_of_meters:
-                 average = sumofdata + item
-            self.repo.git.commit( m= filename + ' Is the file for this day. This was sampling every 60 seconds. On average it saw ' + str(average) + ' power meters')
+            self.repo.git.commit( m= filename + ' Is the file for this day. This was sampling every 60 seconds.')
             self.repo.git.push()
+            power_gain = 0
         except git.exc.GitCommandError:
             print("We done messed up")
+
+class Power_Dict:
+    def __init__(self):
+        self.dict_power = {"":-1}
+        self.count = 0
+    def append(self, ID, data):
+        self.count = self.count + 1
+        if ID in self.dict_power:
+           temp = self.dict_power[ID]
+           self.dict_power[ID] = data
+           return data - temp
+        else:
+           self.dict_power[ID] = data
+           return 0
+    def count(self):
+        temp = self.count
+        self.count = 0
+        return temp
+
 
 class RotatingFileOpener:
     def __init__(self, path, mode='a', prepend="", append=""):
@@ -61,14 +78,13 @@ def decode_data(data):
     parse = fieldstruct.unpack_from
     fields = parse(data)
     test,datet,timet,IDt,consumpt = fields
-    return consumpt
+    return consumpt, IDt
 
 #https://github.com/perplexinglysimple/power_usage
 
-avg_list = []
-number = 0
-file = RotatingFileOpener('./', prepend='power_data-', append='.txt')
-meters_file = RotatingFileOpener('./', prepend='meters_saw-', append='.txt')
+dict_power = Power_Dict()
+file = RotatingFileOpener('./', prepend='power_data_new-', append='.txt')
+meters_file = RotatingFileOpener('./', prepend='meters_saw_new-', append='.txt')
 with meters_file as logger_meters:
  with file as logger:
   #A friend wrote this code to capture our houses data and put it in a text file for latter processing.
@@ -82,15 +98,10 @@ with meters_file as logger_meters:
              file_write=open('/home/anthony/Sept_12_start.txt','a')
              file_write.write(str(output.decode("utf-8"))[0:len(str(output.decode("utf-8")))]+'\n')
         if(int(counter) + 1*60 <= int(time.time())):
-             print(str(number) + " this is how many this time")
-             amount_of_meters.append(number)
-             meters_file.write(str(number) + ',' + str(time.time()) + '\n')
-             sumofdata = 0
-             for item in avg_list:
-                 sumofdata = sumofdata + item[0]
-             logger.write(str((sumofdata / number)) + "," + str(time.time()) + "\n")
-             avg_list.clear()
-             number = 0
+             temp = dict_power.count
+             print(str(temp) + " this is how many this time")
+             meters_file.write(str(temp) + ',' + str(time.time()) + '\n')
+             logger.write(str(power_gain) + "," + str(time.time()) + "\n")
              counter = time.time()
-        avg_list.append([int(decode_data(output).decode("utf-8"))])
-        number = number + 1
+        temp = decode_data(output)
+        power_gain = dict_power.append(str(temp[1].decode("utf-8")), int(temp[0].decode("utf-8")))
