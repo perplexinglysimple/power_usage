@@ -13,7 +13,7 @@ class drive:
        self.repo = git.Repo( './' )
     def upload_file(self, file, filename):
         try:
-            self.repo.git.add([filename])
+            self.repo.git.add(filename)
             self.repo.git.commit( m= filename + ' Is the file for this day. This was sampling every 60 seconds.')
             self.repo.git.push()
             power_gain = 0
@@ -34,9 +34,9 @@ class Power_Dict:
            self.dict_power[ID] = data
            return 0
     def count(self):
-        temp = self.count
+        self._temp = self.count
         self.count = 0
-        return temp
+        return self._temp
 
 
 class RotatingFileOpener:
@@ -104,4 +104,4 @@ with meters_file as logger_meters:
              logger.write(str(power_gain) + "," + str(time.time()) + "\n")
              counter = time.time()
         temp = decode_data(output)
-        power_gain = dict_power.append(str(temp[1].decode("utf-8")), int(temp[0].decode("utf-8")))
+        power_gain = power_gain + dict_power.append(str(temp[1].decode("utf-8")), int(temp[0].decode("utf-8")))
