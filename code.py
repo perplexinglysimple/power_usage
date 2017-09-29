@@ -13,8 +13,8 @@ class drive:
        self.repo = git.Repo( './' )
     def upload_file(self, file, filename):
         try:
-            self.repo.git.add(filename)
-            self.repo.git.commit( m= filename + ' Is the file for this day. This was sampling every 60 seconds.')
+            self.repo.git.add([filename])
+            self.repo.git.commit( m= ' Is the file for this day. This was sampling every 60 seconds.')
             self.repo.git.push()
             power_gain = 0
         except git.exc.GitCommandError:
@@ -25,18 +25,19 @@ class Power_Dict:
         self.dict_power = {"":-1}
         self.count = 0
     def append(self, ID, data):
-        self.count = self.count + 1
         if ID in self.dict_power:
            temp = self.dict_power[ID]
            self.dict_power[ID] = data
            return data - temp
         else:
            self.dict_power[ID] = data
+           self.count = self.count + 1
            return 0
     def count(self):
-        self._temp = self.count
+        _temp = self.count
         self.count = 0
-        return self._temp
+        self.dict_power = {"":-1}
+        return _temp
 
 
 class RotatingFileOpener:
